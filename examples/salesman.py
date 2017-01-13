@@ -46,9 +46,11 @@ class recalculatebySA(Annealer):
             return self.graph[tpath[0]][tpath[1]]['cost']
         if len(tpath) == 1:
             return 0
-        cost = 0
-        for i in (0,len(tpath)-2):
-            cost += self.graph[tpath[i]][tpath[i+1]]['cost']
+        
+        else:
+            cost = 0
+            for i in (0,len(tpath)-2):
+                cost = cost + self.graph[tpath[i]][tpath[i+1]]['cost']
         return cost
     def __init__(self , state , graph):
         self.graph = graph
@@ -56,9 +58,18 @@ class recalculatebySA(Annealer):
         self.flow = {}
         super(recalculatebySA, self).__init__(state) 
     def move(self):
-        
-        for flowkey in self.flow:
+        #2 method to move ?!? 
+        '''
+        for flowkey in self.flow.keys():
             self.state[flowkey] = self.path[flowkey][random.randint(0, len(self.path[flowkey]) - 1)]
+        '''
+        #random select a key
+        #'''
+        li = list(self.flow.keys())
+        flowkey = li[random.randint(0, len(li) - 1)]
+        #random select a path
+        self.state[flowkey] = self.path[flowkey][random.randint(0, len(self.path[flowkey]) - 1)]
+        #'''
 
 
     def energy(self):
@@ -66,10 +77,10 @@ class recalculatebySA(Annealer):
             all the cost
         '''
         e = 0
-        for flowkey in self.flow:
-            e += self.distance(self.state[flowkey] , self.graph)
+        for flowkey in self.flow.keys():
+            e = e + self.distance(self.state[flowkey] , self.graph)
 
-        return float(e)
+        return e
 
 
 
@@ -94,6 +105,12 @@ if __name__ == '__main__':
     flow = {}
     path = {}
     selectpath = {}
+    app = []
+    '''
+    for a in nx.shortest_simple_paths(g, source=1,target=4, weight='cost'):
+        app.append(a)
+    print (app)
+    '''
     flow[('10.0.0.1','10.0.0.4')] = {'ip_src':'10.0.0.1','ip_dst':'10.0.0.4','src':1,'dst':4} 
     flow[('10.0.0.2','10.0.0.3')] = {'ip_src':'10.0.0.2','ip_dst':'10.0.0.3','src':2,'dst':3} 
     flow[('10.0.0.4','10.0.0.2')] = {'ip_src':'10.0.0.4','ip_dst':'10.0.0.2','src':4,'dst':2} 
@@ -113,12 +130,18 @@ if __name__ == '__main__':
     tsp = recalculatebySA(selectpath , g )
     tsp.path = path
     tsp.flow = flow
-    tsp.copy_strategy = "deepcopy"
-    #print (tsp.flow)
-    
+    tsp.copy_strategy = "method"
     state, e = tsp.anneal()
+    print (selectpath)
+    print ("cost %d" % e )
     print (state)
-
+    """
+    state results are wrong but the enegry ,or the cost is right
+    cost 15
+    {('10.0.0.2', '10.0.0.3'): [2, 3], ('10.0.0.1', '10.0.0.4'): [1, 3, 2, 4], ('10.0.0.4', '10.0.0.2'): [4, 2],
+    ('10.0.0.3' , '10.0.0.4'): [3, 4], ('10.0.0.4', '10.0.0.1'): [4, 2, 1]}
+    3+7+2+2+4???
+    """
 
     # initial state, a randomly-ordered itinerary
     # init_state = list(cities.keys())
